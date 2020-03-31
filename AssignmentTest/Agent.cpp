@@ -142,8 +142,7 @@ void Agent::moveAgent()
 		columnQueue.push(cm);
 		visited[cm][rm] = true;
 		stepsTaken++;
-		cout << "Hello";
-		cout << "Hello"; 
+		
 	}
 	// if a move was not made in the previous turn, then it is considered a dead end and marked with a 4
 	if (!moveMade)
@@ -152,6 +151,7 @@ void Agent::moveAgent()
 		// because the current location didn't progess the player, it is considered a deadend and is set to 4 
 		Grid[column][row] = 4;
 		deadEnd = false;
+
 	}
 
 
