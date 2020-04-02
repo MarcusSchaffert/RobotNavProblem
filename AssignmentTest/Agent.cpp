@@ -15,13 +15,7 @@ Agent::Agent(int c, int r, int sr, int sc) : visited(c, vector<bool>(r)), Grid(c
 	// starting row
 	row = sr;
 	stepsTaken = 0;
-	for (int j = 0; j < 5; j++)
-	{
-		for (int i = 0; i < 11; i++)
-		{
-			visited[i][j] = 0;
-		}
-	}
+	ResetVisitedMatrix();
 
 	for (int j = 0; j < 5; j++)
 	{
@@ -37,9 +31,110 @@ Agent::Agent(int c, int r, int sr, int sc) : visited(c, vector<bool>(r)), Grid(c
 	counterToGoal == 0;
 }
 
+string Agent::DepthFirstSearch()
+{
+	cout << "DFS" << endl;
+	cout << " " << endl;
+	// always reset matrices before using them 
+	ResetGridMatrix();
+	ResetVisitedMatrix();
+	InitialiseCoordinates();
+	// mark inital location as visited 
+
+	visited[column][row] = true;
+	rowQueueLIFO.push(row);
+	columnQueueLIFO.push(column);
+	while (rowQueueLIFO.size() > 0)
+	{
+		row = rowQueueLIFO.top();
+		rowQueueLIFO.pop();
+		column = columnQueueLIFO.top();
+		columnQueueLIFO.pop();
+
+		// goal is found - goal state marked with integer value 1
+		if (Grid[column][row] == 9)
+		{
+			//result = "Goal found " + stepsTaken;
+			//return result;
+
+			cout << "Path to goal" << endl;
+			cout << " " << endl;
+			PathToGoal();
+			return "Goal found ";
+		}
+		// we indicate movement by changing the value of the matrix position to 1 from 0
+		if (Grid[column][row] != 5)
+		{
+			Grid[column][row] = 1;
+		}
+
+		// cout the grid to show how the agent is moving through the matrix
+
+		PrintMatrix();
+
+		cout << "" << endl;
+		moveAgent();
+	}
+	cout << "my current locaiton is " << column << row << endl;
+	return "failure";
+
+}
+
+void Agent::ResetVisitedMatrix()
+{
+	for (int j = 0; j < 5; j++)
+	{
+		for (int i = 0; i < 11; i++)
+		{
+			visited[i][j] = false;
+		}
+	}
+}
+
+void Agent::ResetGridMatrix()
+{
+//	Grid = InitialiseMatrix(GridCopy);
+}
+
+void Agent::PrintMatrix()
+{
+	// cout the grid to show how the agent is moving through the matrix
+
+	for (int j = 0; j < 5; j++)
+	{
+		for (int i = 0; i < 11; i++)
+		{
+			cout << Grid[i][j];
+
+		}
+		cout << "" << endl;
+	}
+}
+
+void Agent::InitialiseCoordinates()
+{
+	row = startingRow;
+	column = startingColumn;
+}
+
+void Agent::ResetMatrix()
+{
+	for (int j = 0; j < 5; j++)
+	{
+		for (int i = 0; i < 11; i++)
+		{
+			Grid[i][j] = 0;
+		}
+	}
+}
+
 // week 3 
 string Agent::BreadthFirstSearch()
 {
+	// always reset matrices before using them 
+	ResetGridMatrix();
+	ResetVisitedMatrix();
+	InitialiseCoordinates();
 	// mark inital location as visited 
 
 	visited[column][row] = true;
@@ -68,27 +163,11 @@ string Agent::BreadthFirstSearch()
 		{
 			Grid[column][row] = 1;
 		}
-
-		// cout the grid to show how the agent is moving through the matrix
-
-		for (int j = 0; j < 5; j++)
-		{
-			for (int i = 0; i < 11; i++)
-			{
-				cout << Grid[i][j];
-
-			}
-			cout << "" << endl;
-		}
+		PrintMatrix();
 
 		cout << "" << endl;
 		moveAgent();
 	}
-
-
-
-
-
 	cout << "my current locaiton is " << column << row << endl;
 	return "failure";
 }
@@ -237,8 +316,11 @@ void Agent::InitialiseMatrix(int intTest[], int arraySize)
 				//Grid[intTest[i] + intTest[i + 2] - 1][intTest[i + 1] + intTest[i + 3] - 1] = 3;
 			}
 			counter = 1;
+			}
 		}
-	}
+
+		GridCopy = Grid;
+
 }
 
 // week 4 
@@ -249,13 +331,7 @@ void Agent::PathToGoal()
 
 	while (!completePathFound)
 	{
-		for (int j = 0; j < 5; j++)
-		{
-			for (int i = 0; i < 11; i++)
-			{
-				visited[i][j] = false;
-			}
-		}
+		ResetVisitedMatrix();
 		// Starting position equals visited 
 		visited[cm][rm] = true;
 
@@ -336,15 +412,7 @@ void Agent::PathToGoal()
 
 				}
 
-				for (int j = 0; j < 5; j++)
-				{
-					for (int i = 0; i < 11; i++)
-					{
-						cout << Grid[i][j];
-
-					}
-					cout << " " << endl;
-				}
+				PrintMatrix();
 				cout << "" << endl;
 					break;
 			}
@@ -409,6 +477,7 @@ void Agent::PathToGoal()
 		}
 		*/
 	}
+	ResetVisitedMatrix();
 
 	// run a loop to get a path based off if a grid location is marked with one
 	// this makes a string of moves (right, left, up, down ....)

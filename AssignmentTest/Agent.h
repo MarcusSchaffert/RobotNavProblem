@@ -5,6 +5,7 @@
 #include <list>
 #include <queue>
 #include <cstdlib>
+#include <stack>
 using namespace std;
 class Agent
 {
@@ -19,6 +20,7 @@ public:
 	// 0 equals not visited and 1 equals visited
 	vector<vector<bool>> visited;
 	vector<vector<int>> Grid;
+	vector<vector<int>> GridCopy;
 	vector<string> Path; 
 	int counterToGoal;
 	// For moving up or down a row in the matrix
@@ -29,6 +31,11 @@ public:
 	queue<int> rowQueue;
 	queue<int> columnQueue;
 
+	// Stacks used as LIFO queues
+	stack<int> rowQueueLIFO;
+	stack<int> columnQueueLIFO;
+
+
 
 	int stepsTaken;
 	Agent(int c, int r, int sr, int sc);
@@ -37,5 +44,11 @@ public:
 	void PathToGoal();
 
 	string BreadthFirstSearch();
+	string DepthFirstSearch();
+	void ResetVisitedMatrix();
+	void ResetGridMatrix();
+	void PrintMatrix();
+	void InitialiseCoordinates();
+	void ResetMatrix();
 
 };

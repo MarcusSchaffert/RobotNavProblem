@@ -327,6 +327,9 @@ int main()
 	{
 		cout << myAgent.Path[i] << " ";
 	}
+	myAgent.ResetMatrix();
+	myAgent.InitialiseMatrix(intTest, sizeofarray);
+	myAgent.DepthFirstSearch();
 
 
 	
