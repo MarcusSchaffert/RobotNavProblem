@@ -10,7 +10,7 @@ using namespace std;
 class Agent
 {
 public: 
-	int column, row, v, w, rm, cm, startingRow, startingColumn, pathCounter;
+	int column, row, v, w, rm, cm, startingRow, startingColumn, pathCounter, DFSCounter;
 	string result;
 
 	int randomNum = 0;
@@ -50,5 +50,8 @@ public:
 	void PrintMatrix();
 	void InitialiseCoordinates();
 	void ResetMatrix();
+	void PrintPath();
+	void MoveAgentDFS();
+	bool GoalFound(int column, int row);
 
 };

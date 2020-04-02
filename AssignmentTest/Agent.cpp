@@ -24,6 +24,7 @@ Agent::Agent(int c, int r, int sr, int sc) : visited(c, vector<bool>(r)), Grid(c
 			Grid[i][j] = 0;
 		}
 	}
+	DFSCounter = 0;
 
 	// 5 signifies the starting location 
 	Grid[column][row] = 5;
@@ -44,6 +45,9 @@ string Agent::DepthFirstSearch()
 	visited[column][row] = true;
 	rowQueueLIFO.push(row);
 	columnQueueLIFO.push(column);
+
+	rm = row;
+	cm = column;
 	while (rowQueueLIFO.size() > 0)
 	{
 		row = rowQueueLIFO.top();
@@ -52,7 +56,7 @@ string Agent::DepthFirstSearch()
 		columnQueueLIFO.pop();
 
 		// goal is found - goal state marked with integer value 1
-		if (Grid[column][row] == 9)
+		if (GoalFound(column, row))
 		{
 			//result = "Goal found " + stepsTaken;
 			//return result;
@@ -60,20 +64,24 @@ string Agent::DepthFirstSearch()
 			cout << "Path to goal" << endl;
 			cout << " " << endl;
 			PathToGoal();
+			PrintPath();
 			return "Goal found ";
 		}
+
 		// we indicate movement by changing the value of the matrix position to 1 from 0
 		if (Grid[column][row] != 5)
 		{
 			Grid[column][row] = 1;
 		}
 
+
 		// cout the grid to show how the agent is moving through the matrix
 
 		PrintMatrix();
 
 		cout << "" << endl;
-		moveAgent();
+		DFSCounter = 0;
+		MoveAgentDFS();
 	}
 	cout << "my current locaiton is " << column << row << endl;
 	return "failure";
@@ -128,6 +136,128 @@ void Agent::ResetMatrix()
 	}
 }
 
+void Agent::PrintPath()
+{
+	for (int i = 0; i < Path.size(); i++)
+	{
+		cout << Path[i] << " ";
+	}
+}
+
+void Agent::MoveAgentDFS()
+{
+	moveMade = false;
+
+
+	for (int i = 0; i < 4; i++)
+	{
+		
+
+		// for DFS we want to initially set the rm and cm variables to row and column respectively (the locations that were just popped off the stack). This means we are starting from a node to see if it will go any deeper.
+		// However, if a move was made, this function is called recursively which means we are continuing on a path which goes deeper. This requires us to set the row and column to rm and cm respectively.
+		if (DFSCounter < 1)
+		{
+			rm = row;
+			cm = column;
+		}
+		else
+		{
+			row = rm;
+			column = cm;
+		}
+		DFSCounter++;
+		// move up 
+		if (i == 0)
+		{
+			if (row + Move[i] < 0)
+				continue;
+			rm += Move[i];
+		}
+		// move left
+		if (i == 1)
+		{
+			if (column + Move[i] < 0)
+				continue;
+			cm += Move[i];
+		}
+		// move down 
+		if (i == 2)
+		{
+			if (row + Move[i] > 4)
+				continue;
+			rm += Move[i];
+		}
+		// move right 
+		if (i == 3)
+		{
+			if (column + Move[i] > 10)
+				continue;
+			cm += Move[i];
+		}
+
+		if (visited[cm][rm] == true)
+		{
+			// undo changes that were made 
+			cm = column;
+			rm = row;
+			continue;
+		}
+		// a 3 means a block which can't be entered
+		if (Grid[cm][rm] == 3)
+		{
+			cm = column;
+			rm = row;
+			continue;
+		}
+		// moveMade means a valid move was made to progress the agent
+		moveMade = true;
+		/*
+		rowQueue.push(rm);
+		columnQueue.push(cm);
+		*/
+		rowQueueLIFO.push(rm);
+		columnQueueLIFO.push(cm);
+		visited[cm][rm] = true;
+		stepsTaken++;
+		if (moveMade)
+		{
+			if (GoalFound(cm, rm))
+			{
+				break;
+			}
+			// we indicate movement by changing the value of the matrix position to 1 from 0
+			if (Grid[cm][rm] != 5)
+			{
+				Grid[cm][rm] = 1;
+			}
+			PrintMatrix();
+			cout << "" << endl;
+			// recursive call
+			MoveAgentDFS();
+		}
+
+	}
+	/*
+	// if a move was not made in the previous turn, then it is considered a dead end and marked with a 4
+	if (!moveMade)
+	{
+		deadEnd = true;
+		// because the current location didn't progess the player, it is considered a deadend and is set to 4 
+		Grid[column][row] = 4;
+		deadEnd = false;
+
+	}
+	*/
+
+
+
+}
+
+bool Agent::GoalFound(int column, int row)
+{
+	return Grid[column][row] == 9;
+}
+
 // week 3 
 string Agent::BreadthFirstSearch()
 {
@@ -156,6 +286,7 @@ string Agent::BreadthFirstSearch()
 			cout << "Path to goal" << endl;
 			cout << " " << endl;
 			PathToGoal();
+			PrintPath();
 			return "Goal found ";
 		}
 		// we indicate movement by changing the value of the matrix position to 1 from 0
@@ -175,6 +306,7 @@ string Agent::BreadthFirstSearch()
 void Agent::moveAgent()
 {
 	moveMade = false;
+
 	for (int i = 0; i < 4; i++)
 	{
 		// always set rm and cm to the current node of column and row
@@ -219,6 +351,7 @@ void Agent::moveAgent()
 		moveMade = true;
 		rowQueue.push(rm);
 		columnQueue.push(cm);
+	
 		visited[cm][rm] = true;
 		stepsTaken++;
 		
@@ -233,13 +366,14 @@ void Agent::moveAgent()
 
 	}
 
-
 }
 
 
 // week 3
 void Agent::InitialiseMatrix(int intTest[], int arraySize)
 {
+	// set the inital location of the player, mark it with a 5
+	Grid[startingColumn][startingRow] = 5;
 	// counter used for the second for loop
 	int counter = 0; 
 	// Loop for determining where the walls are in the grid 
