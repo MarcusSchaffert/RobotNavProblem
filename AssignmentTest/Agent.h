@@ -6,6 +6,7 @@
 #include <queue>
 #include <cstdlib>
 #include <stack>
+#include "Grid.h"
 using namespace std;
 class Agent
 {
@@ -19,7 +20,7 @@ public:
 	bool moveMade = false;
 	// 0 equals not visited and 1 equals visited
 	vector<vector<bool>> visited;
-	vector<vector<int>> Grid;
+	//vector<vector<int>> Grid;
 	vector<vector<int>> GridCopy;
 	vector<string> Path; 
 	int counterToGoal;
@@ -35,23 +36,33 @@ public:
 	stack<int> rowQueueLIFO;
 	stack<int> columnQueueLIFO;
 
+	// Priority Queue 
+	priority_queue<int> priorityQueueGFS;
+	vector<vector<int>> rowQueueGFS[50];
+	vector<vector<int>> columnQueueGFS[50];
+
+	
 
 
 	int stepsTaken;
-	Agent(int c, int r, int sr, int sc);
+	Agent(int c, int r, int sr, int sc, int intArray[], int arraySize, int g1c, int g1r, int g2c, int g2r);
 	void moveAgent();
-	void InitialiseMatrix(int intArray[], int arraySize);
+	//void InitialiseMatrix(int intArray[], int arraySize);
 	void PathToGoal();
 
 	string BreadthFirstSearch();
 	string DepthFirstSearch();
-	void ResetVisitedMatrix();
-	void ResetGridMatrix();
-	void PrintMatrix();
-	void InitialiseCoordinates();
-	void ResetMatrix();
+	string GreedyBestFirstSearch();
+	bool MatrixMove(int column, int row, int index);
 	void PrintPath();
 	void MoveAgentDFS();
+	void MoveAgentGBFS();
 	bool GoalFound(int column, int row);
+	bool VisitedOrWall();
+	//Grid GetGrid();
+	//void setGrid() {};
+	Grid myAgentGrid;
 
+private:
+	//Grid myAgentGrid;
 };

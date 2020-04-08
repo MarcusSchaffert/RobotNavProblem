@@ -6,17 +6,11 @@
 #include <string>
 #include <cctype> // check if char is an integer
 #include <sstream>
-#include "Grid.h"
 #include <vector>
 #include "Agent.h"
 #include <ctime>
 using namespace std;
 
-struct Test
-{
-	int x, y, width, height;
-	string description;
-};
 
 int main()
 {
@@ -26,7 +20,9 @@ int main()
 	int intTest[38];
 	int counter = 0;
 	int iteratorTest = 0;
-	Grid myGrid;
+	// Priority Queue 
+	priority_queue<int> rowQueueGFS;
+	priority_queue<int> columnQueueGFS;
 
 	// week 1 
 	if (!fileOpen.good())
@@ -74,16 +70,18 @@ int main()
 
 
 	// initialise agent with columns and rows
-	Agent myAgent(intTest[1], intTest[0], intTest[3], intTest[2]);
-
-
-
-
-	myAgent.InitialiseMatrix(intTest, sizeofarray);
-
-
+	Agent myAgent(intTest[1], intTest[0], intTest[3], intTest[2], intTest, sizeofarray, intTest[4], intTest[5], intTest[6], intTest[7]);
+	//myAgent.myAgentGrid.ResetGridMatrix();
+	myAgent.myAgentGrid.InitialiseMatrix(intTest, sizeofarray);
+	myAgent.myAgentGrid.PrintValueMatrix();
 	cout << "" << endl;
-
+	myAgent.myAgentGrid.PrintMatrix();
+	//myAgent.BreadthFirstSearch();
+	cout << "" << endl;
+	//myAgent.DepthFirstSearch();
+	myAgent.BreadthFirstSearch();
+	//myAgent.GreedyBestFirstSearch();
+	/*
 	string answer;
 
 	answer = myAgent.BreadthFirstSearch();
@@ -92,14 +90,12 @@ int main()
 	cout << myAgent.stepsTaken;
 
 
-	
-	myAgent.ResetMatrix();
-	myAgent.InitialiseMatrix(intTest, sizeofarray);
+	myAgent.GetGrid().InitialiseMatrix(intTest, sizeofarray);
 	myAgent.DepthFirstSearch();
 	cout << answer << endl;
 	cout << myAgent.stepsTaken;
 
-
+	*/
 	
 	fileOpen.close();
 

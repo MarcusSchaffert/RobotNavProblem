@@ -1,6 +1,6 @@
 #include "Agent.h"
 
-Agent::Agent(int c, int r, int sr, int sc) : visited(c, vector<bool>(r)), Grid(c, vector<int>(r))
+Agent::Agent(int c, int r, int sr, int sc, int intArray[], int arraySize, int g1c, int g1r, int g2c, int g2r) :  myAgentGrid(sr, sc, c, r, intArray, arraySize, g1c, g1r, g2c, g2r)
 {
 
 	//start
@@ -15,21 +15,11 @@ Agent::Agent(int c, int r, int sr, int sc) : visited(c, vector<bool>(r)), Grid(c
 	// starting row
 	row = sr;
 	stepsTaken = 0;
-	ResetVisitedMatrix();
-
-	for (int j = 0; j < 5; j++)
-	{
-		for (int i = 0; i < 11; i++)
-		{
-			Grid[i][j] = 0;
-		}
-	}
+	
 	DFSCounter = 0;
 
-	// 5 signifies the starting location 
-	Grid[column][row] = 5;
 
-	counterToGoal == 0;
+	counterToGoal = 0;
 }
 
 string Agent::DepthFirstSearch()
@@ -37,12 +27,10 @@ string Agent::DepthFirstSearch()
 	cout << "DFS" << endl;
 	cout << " " << endl;
 	// always reset matrices before using them 
-	ResetGridMatrix();
-	ResetVisitedMatrix();
-	InitialiseCoordinates();
+	row = myAgentGrid.getStartingRow();
+	column = myAgentGrid.getStartingColumn();
 	// mark inital location as visited 
-
-	visited[column][row] = true;
+	myAgentGrid.SetVisitedValue(true, column, row);
 	rowQueueLIFO.push(row);
 	columnQueueLIFO.push(column);
 
@@ -69,15 +57,15 @@ string Agent::DepthFirstSearch()
 		}
 
 		// we indicate movement by changing the value of the matrix position to 1 from 0
-		if (Grid[column][row] != 5)
+		if (myAgentGrid.getPositionValue(column, row) != 5)
 		{
-			Grid[column][row] = 1;
+			myAgentGrid.SetPositionValue(1, column, row);
 		}
 
 
 		// cout the grid to show how the agent is moving through the matrix
 
-		PrintMatrix();
+		myAgentGrid.PrintMatrix();
 
 		cout << "" << endl;
 		DFSCounter = 0;
@@ -88,62 +76,6 @@ string Agent::DepthFirstSearch()
 
 }
 
-void Agent::ResetVisitedMatrix()
-{
-	for (int j = 0; j < 5; j++)
-	{
-		for (int i = 0; i < 11; i++)
-		{
-			visited[i][j] = false;
-		}
-	}
-}
-
-void Agent::ResetGridMatrix()
-{
-//	Grid = InitialiseMatrix(GridCopy);
-}
-
-void Agent::PrintMatrix()
-{
-	// cout the grid to show how the agent is moving through the matrix
-
-	for (int j = 0; j < 5; j++)
-	{
-		for (int i = 0; i < 11; i++)
-		{
-			cout << Grid[i][j];
-
-		}
-		cout << "" << endl;
-	}
-}
-
-void Agent::InitialiseCoordinates()
-{
-	row = startingRow;
-	column = startingColumn;
-}
-
-void Agent::ResetMatrix()
-{
-	for (int j = 0; j < 5; j++)
-	{
-		for (int i = 0; i < 11; i++)
-		{
-			Grid[i][j] = 0;
-		}
-	}
-}
-
-void Agent::PrintPath()
-{
-	for (int i = 0; i < Path.size(); i++)
-	{
-		cout << Path[i] << " ";
-	}
-}
-
 void Agent::MoveAgentDFS()
 {
 	moveMade = false;
@@ -151,7 +83,10 @@ void Agent::MoveAgentDFS()
 
 	for (int i = 0; i < 4; i++)
 	{
-		
+		if (GoalFound(cm, rm))
+		{
+			break;
+		}
 
 		// for DFS we want to initially set the rm and cm variables to row and column respectively (the locations that were just popped off the stack). This means we are starting from a node to see if it will go any deeper.
 		// However, if a move was made, this function is called recursively which means we are continuing on a path which goes deeper. This requires us to set the row and column to rm and cm respectively.
@@ -166,45 +101,14 @@ void Agent::MoveAgentDFS()
 			column = cm;
 		}
 		DFSCounter++;
-		// move up 
-		if (i == 0)
+		if (!MatrixMove(column, row, i))
 		{
-			if (row + Move[i] < 0)
-				continue;
-			rm += Move[i];
-		}
-		// move left
-		if (i == 1)
-		{
-			if (column + Move[i] < 0)
-				continue;
-			cm += Move[i];
-		}
-		// move down 
-		if (i == 2)
-		{
-			if (row + Move[i] > 4)
-				continue;
-			rm += Move[i];
-		}
-		// move right 
-		if (i == 3)
-		{
-			if (column + Move[i] > 10)
-				continue;
-			cm += Move[i];
-		}
-
-		if (visited[cm][rm] == true)
-		{
-			// undo changes that were made 
-			cm = column;
-			rm = row;
 			continue;
 		}
-		// a 3 means a block which can't be entered
-		if (Grid[cm][rm] == 3)
+		// Determine if the location has been visited or is a wall
+		if (myAgentGrid.getVisitedValue(cm, rm) == true || myAgentGrid.getPositionValue(cm, rm) == 3)
 		{
+			// undo changes that were made 
 			cm = column;
 			rm = row;
 			continue;
@@ -217,20 +121,21 @@ void Agent::MoveAgentDFS()
 		*/
 		rowQueueLIFO.push(rm);
 		columnQueueLIFO.push(cm);
-		visited[cm][rm] = true;
+		myAgentGrid.SetVisitedValue(true, cm, rm);
 		stepsTaken++;
 		if (moveMade)
 		{
 			if (GoalFound(cm, rm))
 			{
+				i = 4;
 				break;
 			}
 			// we indicate movement by changing the value of the matrix position to 1 from 0
-			if (Grid[cm][rm] != 5)
+			if (myAgentGrid.getPositionValue(cm, rm) != 5)
 			{
-				Grid[cm][rm] = 1;
+				myAgentGrid.SetPositionValue(1, cm, rm); 
 			}
-			PrintMatrix();
+			myAgentGrid.PrintMatrix();
 			cout << "" << endl;
 			// recursive call
 			MoveAgentDFS();
@@ -253,32 +158,23 @@ void Agent::MoveAgentDFS()
 
 }
 
-bool Agent::GoalFound(int column, int row)
-{
-	return Grid[column][row] == 9;
-}
 
-// week 3 
-string Agent::BreadthFirstSearch()
+
+string Agent::GreedyBestFirstSearch()
 {
-	// always reset matrices before using them 
-	ResetGridMatrix();
-	ResetVisitedMatrix();
-	InitialiseCoordinates();
+	// always reset matrices before using them
+	row = myAgentGrid.getStartingRow();
+	column = myAgentGrid.getStartingColumn();
 	// mark inital location as visited 
 
-	visited[column][row] = true;
-	rowQueue.push(row);
-	columnQueue.push(column);
-	while (rowQueue.size() > 0)
+	myAgentGrid.SetVisitedValue(true, column, row);
+	while (priorityQueueGFS.size() > 0)
 	{
-		row = rowQueue.front();
-		rowQueue.pop();
-		column = columnQueue.front();
-		columnQueue.pop();
+		
+		
 
 		// goal is found - goal state marked with integer value 1
-		if (Grid[column][row] == 9)
+		if (myAgentGrid.getPositionValue(column, row) == 9)
 		{
 			//result = "Goal found " + stepsTaken;
 			//return result;
@@ -290,11 +186,105 @@ string Agent::BreadthFirstSearch()
 			return "Goal found ";
 		}
 		// we indicate movement by changing the value of the matrix position to 1 from 0
-		if (Grid[column][row] != 5)
+		if (myAgentGrid.getPositionValue(column, row) != 5)
 		{
-			Grid[column][row] = 1;
+			myAgentGrid.SetPositionValue(1, column, row);
 		}
-		PrintMatrix();
+		myAgentGrid.PrintMatrix();
+
+		cout << "" << endl;
+		MoveAgentGBFS();
+	}
+	cout << "my current locaiton is " << column << row << endl;
+	return "failure";
+}
+
+void Agent::MoveAgentGBFS()
+{
+	moveMade = false;
+
+	for (int i = 0; i < 4; i++)
+	{
+		// always set rm and cm to the current node of column and row
+		// this allows the node to be used as a starting position to see which neighbouring nodes can be accessed
+		rm = row;
+		cm = column;
+		// move up 
+
+		// MatrixMove is a function which will potentially advance the agent one position. If it does, it returns true and if it doesn't it returns false
+		if (!MatrixMove(column, row, i))
+		{
+			// if no valid move was able to be made then we skip to the next potential move
+			continue;
+		}
+
+		// determines if the location of rm and cm is a wall. If so, continue and don't save that location 
+		if (VisitedOrWall())
+		{
+			continue;
+		}
+		// moveMade means a valid move was made to progress the agent
+		moveMade = true;
+
+		// push the value of the coordinates of cm and rm
+		priorityQueueGFS.push(myAgentGrid.getValueMatrix()[cm][rm]);
+		rowQueueGFS->push_back(rm);
+		columnQueueGFS->push_back(cm)
+
+		myAgentGrid.SetVisitedValue(true, cm, rm);
+		stepsTaken++;
+
+	}
+	// if a move was not made in the previous turn, then it is considered a dead end and marked with a 4
+	if (!moveMade)
+	{
+		deadEnd = true;
+		// because the current location didn't progess the player, it is considered a deadend and is set to 4 
+		myAgentGrid.SetPositionValue(4, column, row);
+		deadEnd = false;
+
+	}
+}
+
+
+
+
+// week 3 
+string Agent::BreadthFirstSearch()
+{
+	// always reset matrices before using them
+	row = myAgentGrid.getStartingRow();
+	column = myAgentGrid.getStartingColumn();
+	// mark inital location as visited 
+
+	myAgentGrid.SetVisitedValue(true, column, row);
+	rowQueue.push(row);
+	columnQueue.push(column);
+	while (rowQueue.size() > 0)
+	{
+		row = rowQueue.front();
+		rowQueue.pop();
+		column = columnQueue.front();
+		columnQueue.pop();
+
+		// goal is found - goal state marked with integer value 1
+		if (myAgentGrid.getPositionValue(column, row) == 9)
+		{
+			//result = "Goal found " + stepsTaken;
+			//return result;
+
+			cout << "Path to goal" << endl;
+			cout << " " << endl;
+			PathToGoal();
+			PrintPath();
+			return "Goal found ";
+		}
+		// we indicate movement by changing the value of the matrix position to 1 from 0
+		if (myAgentGrid.getPositionValue(column, row) != 5)
+		{
+			myAgentGrid.SetPositionValue(1, column, row);
+		}
+		myAgentGrid.PrintMatrix();
 
 		cout << "" << endl;
 		moveAgent();
@@ -302,6 +292,10 @@ string Agent::BreadthFirstSearch()
 	cout << "my current locaiton is " << column << row << endl;
 	return "failure";
 }
+
+
+
+
 // week 3
 void Agent::moveAgent()
 {
@@ -314,45 +308,25 @@ void Agent::moveAgent()
 		rm = row;
 		cm = column;
 		// move up 
-		if (i == 0)
+
+		// MatrixMove is a function which will potentially advance the agent one position. If it does, it returns true and if it doesn't it returns false
+		if (!MatrixMove(column, row, i))
 		{
-			if (row + Move[i] < 0)
-				continue;
-			rm +=  Move[i];
-		}
-		// move left
-		if (i == 1)
-		{
-			if (column + Move[i] < 0)
-				continue;
-			cm+= Move[i];
-		}
-		// move down 
-		if (i == 2)
-		{
-			if (row + Move[i] > 4)
-				continue;
-			rm += Move[i];
-		}
-		// move right 
-		if (i == 3)
-		{
-			if (column + Move[i] > 10)
-				continue;
-			cm += Move[i];
+			// if no valid move was able to be made then we skip to the next potential move
+			continue;
 		}
 
-		if (visited[cm][rm] == true)
+		// determines if the location of rm and cm is a wall. If so, continue and don't save that location 
+		if (VisitedOrWall())
+		{
 			continue;
-		// a 3 means a block which can't be entered
-		if (Grid[cm][rm] == 3)
-			continue;
-		// moveMade means a valid move was made to progress the agent
-		moveMade = true;
-		rowQueue.push(rm);
-		columnQueue.push(cm);
+		}
 	
-		visited[cm][rm] = true;
+		moveMade = true;
+		// method determines what search to use, hence what queue to use
+			rowQueue.push(rm);
+			columnQueue.push(cm);
+		myAgentGrid.SetVisitedValue(true, cm, rm);
 		stepsTaken++;
 		
 	}
@@ -361,7 +335,7 @@ void Agent::moveAgent()
 	{
 		deadEnd = true;
 		// because the current location didn't progess the player, it is considered a deadend and is set to 4 
-		Grid[column][row] = 4;
+		myAgentGrid.SetPositionValue(4, column, row);
 		deadEnd = false;
 
 	}
@@ -369,93 +343,71 @@ void Agent::moveAgent()
 }
 
 
-// week 3
-void Agent::InitialiseMatrix(int intTest[], int arraySize)
+// Week 5
+// Used to determine if a valid move can be made within the matrix and, if so, the method will update rm and cm (row move and column move).
+// rm and cm then might be put into the queue if they are not walls and if they are not already visited
+bool Agent::MatrixMove(int column, int row, int i)
 {
-	// set the inital location of the player, mark it with a 5
-	Grid[startingColumn][startingRow] = 5;
-	// counter used for the second for loop
-	int counter = 0; 
-	// Loop for determining where the walls are in the grid 
-	for (int i = 0; i < 7; i++)
+
+	// move up 
+	if (i == 0)
 	{
-		// setting goal state 
-		if (i == 4)
+		if (row + Move[i] < 0)
 		{
-			Grid[intTest[i]][intTest[i + 1]] = 9;
+
 		}
-		// setting goal state 
-		if (i == 6)
+		else
 		{
-			Grid[intTest[i]][intTest[i + 1]] = 9;
+			rm += Move[i];
+			return true;
 		}
 	}
-	// arraySize - 4 because my algorithm works with the first number of the wall line 
-	// it uses the first number to determine the other three numbers in that line
-	// counter starting at 5 is the inital state which allows the if statement to run from the beginning
-	counter = 5;
-		for(int i = 8; i < arraySize - 4; i++)
+	// move left
+	if (i == 1)
+	{
+		if (column + Move[i] < 0)
 		{
 
-		// counter is incremented 
-		// every 4th index of the array corresponds to a different set of coordinates for walls
-		counter++;
-		if (counter > 4)
-		{
-			Grid[intTest[i]][intTest[i + 1]] = 3;
-
-
-			// we are accessing each element in the array by a fixed amount such as i + 2 and i + 3 because the file format should always be the same which means these indexes should correspond to the information we want
-			// e.g we are at i = 8, so i + 2 = 10. This means we are looking at the value of index 10 of intTest
-			if (intTest[i + 2] > 1)
-			{
-				for (int j = 1; j < intTest[i + 2]; j++)
-				{
-					Grid[intTest[i] + intTest[i + 2] - j][intTest[i + 1]] = 3;
-				}
-			}
-			if (intTest[i + 3] > 1)
-			{
-				for (int j = 1; j < intTest[i + 3]; j++)
-				{
-					Grid[intTest[i]][intTest[i + 1] + intTest[i + 3] - j] = 3;
-				}
-			}
-
-			// Need a nested for loop to determine if a wall exists when the row and column locations of the wall are greater than 1 
-			// with the for loops, we are saying that we want either k or j to be used for the location that has greater coordinates in either the x or y direction 
-			// for example, if we have (2,1) we know that the column is 2 and row is 1, therefore the column requires more steps to get to and hence needs a bigger number (the nested for loop number will be bigger than the outer for loop's number)
-			if (intTest[i + 3] > 1 && intTest[i + 2] > 1)
-			{
-				if (intTest[i + 3] >= intTest[i + 2])
-				{
-					for (int j = 1; j < intTest[i + 2]; j++)
-					{
-						for (int k = 1; k < intTest[i + 3]; k++)
-						{
-							Grid[intTest[i] + intTest[i + 2] - j][intTest[i + 1] + intTest[i + 3] - k] = 3;
-						}
-					}
-				}
-				if (intTest[i + 3] <= intTest[i + 2])
-				{
-					for (int j = 1; j < intTest[i + 3]; j++)
-					{
-						for (int k = 1; k < intTest[i + 2]; k++)
-						{
-							Grid[intTest[i] + intTest[i + 2] - k][intTest[i + 1] + intTest[i + 3] - j] = 3;
-						}
-					}
-				}
-				//Grid[intTest[i] + intTest[i + 2] - 1][intTest[i + 1] + intTest[i + 3] - 1] = 3;
-			}
-			counter = 1;
-			}
 		}
+		else
+		{
+			cm += Move[i];
+			return true;
+		}
+	}
+	// move down 
+	if (i == 2)
+	{
+		if (row + Move[i] > 4)
+		{
 
-		GridCopy = Grid;
+		}
+		else
+		{
+			rm += Move[i];
+			return true;
+		}
+	}
+	// move right 
+	if (i == 3)
+	{
+		if (column + Move[i] > 10)
+		{
+
+		}
+		else
+		{
+			cm += Move[i];
+			return true;
+		}
+	}
+	return false;
 
 }
+
+
+
+
 
 // week 4 
 void Agent::PathToGoal()
@@ -465,62 +417,62 @@ void Agent::PathToGoal()
 
 	while (!completePathFound)
 	{
-		ResetVisitedMatrix();
+		myAgentGrid.ResetVisitedMatrix();
 		// Starting position equals visited 
-		visited[cm][rm] = true;
+		myAgentGrid.SetVisitedValue(true, cm, rm);
 
 		for (int i = 0; i < stepsTaken; i ++)
 		{
 
 			// move up
-			if (rm != 0  && visited[cm][rm - 1] == false)
+			if (rm != 0  && myAgentGrid.getVisitedValue(cm, rm - 1) == false)
 			{
-				if (Grid[cm][rm - 1] == 1 || Grid[cm][rm - 1] == 9)
+				if (myAgentGrid.getPositionValue(cm, rm - 1) == 1 || myAgentGrid.getPositionValue(cm, rm - 1)  == 9)
 				{
 					Path.push_back("UP");
 					rm--;
-					visited[cm][rm] = true;
+					myAgentGrid.SetVisitedValue(true, cm, rm);
 					moveMade = true;
 				}
 			}
 
 			// move left
-			if (cm != 0 && visited[cm - 1][rm] == false)
+			if (cm != 0 && myAgentGrid.getVisitedValue(cm - 1, rm) == false)
 			{
-				if (Grid[cm - 1][rm] == 1 || Grid[cm - 1][rm] == 9)
+				if (myAgentGrid.getPositionValue(cm - 1, rm) == 1 || myAgentGrid.getPositionValue(cm - 1, rm) == 9)
 				{
 					Path.push_back("LEFT");
 					cm--;
-					visited[cm][rm] = true;
+					myAgentGrid.SetVisitedValue(true, cm, rm);
 					moveMade = true;
 				}
 			}
 
 			// move down
-			if (rm != 4 && visited[cm][rm + 1] == false)
+			if (rm != 4 && myAgentGrid.getVisitedValue(cm, rm +1) == false)
 			{
-				if (Grid[cm][rm + 1] == 1 || Grid[cm][rm + 1] == 9)
+				if (myAgentGrid.getPositionValue(cm, rm + 1) == 1 || myAgentGrid.getPositionValue(cm, rm + 1) == 9)
 				{
 					Path.push_back("DOWN");
 					rm++;
-					visited[cm][rm] = true;
+					myAgentGrid.SetVisitedValue(true, cm, rm);
 					moveMade = true;
 				}
 			}
 
 			// move right
-			if (cm != 10 && visited[cm +1][rm] == false)
+			if (cm != 10 && myAgentGrid.getVisitedValue(cm + 1, rm) == false)
 			{
-				if (Grid[cm + 1][rm] == 1 || Grid[cm + 1][rm] == 9)
+				if (myAgentGrid.getPositionValue(cm + 1, rm) == 1 || myAgentGrid.getPositionValue(cm + 1, rm) == 9)
 				{
 					Path.push_back("RIGHT");
 					cm++;
-					visited[cm][rm] = true;
+					myAgentGrid.SetVisitedValue(true, cm, rm);
 					moveMade = true;
 				}
 			}
 
-			if (Grid[cm][rm] == 9)
+			if (myAgentGrid.getPositionValue(cm, rm) == 9)
 			{
 				// if we have reached the goal then break so the for loop no longer continues. 
 				// since completePathFound is now true, the while loop will stop 
@@ -540,13 +492,13 @@ void Agent::PathToGoal()
 
 				// if there was no move made and the column and row is not the starting position, then mark that space with a zero
 				// 5 signifies the starting position 
-				if (Grid[cm][rm] != 5)
+				if (myAgentGrid.getPositionValue(cm, rm) != 5)
 				{
-						Grid[cm][rm] = 0;
+						myAgentGrid.SetPositionValue(0, cm, rm);
 
 				}
 
-				PrintMatrix();
+				myAgentGrid.PrintMatrix();
 				cout << "" << endl;
 					break;
 			}
@@ -611,8 +563,7 @@ void Agent::PathToGoal()
 		}
 		*/
 	}
-	ResetVisitedMatrix();
-
+	myAgentGrid.ResetVisitedMatrix();
 	// run a loop to get a path based off if a grid location is marked with one
 	// this makes a string of moves (right, left, up, down ....)
 
@@ -626,3 +577,25 @@ void Agent::PathToGoal()
 }
 	
 	//vector<vector<int>> Grid, int intArray[] (was added to constructor originally)
+
+void Agent::PrintPath()
+{
+	for (int i = 0; i < Path.size(); i++)
+	{
+		cout << Path[i] << ", ";
+	}
+}
+
+bool Agent::GoalFound(int column, int row)
+{
+	return myAgentGrid.getPositionValue(column, row) == 9;
+}
+
+bool Agent::VisitedOrWall()
+{
+	if (myAgentGrid.getVisitedValue(cm, rm) == true || myAgentGrid.getPositionValue(cm, rm) == 3)
+	{
+		return true;
+	}
+	return false;
+}
